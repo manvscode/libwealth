@@ -108,7 +108,9 @@ value_t financial_profile_debt_to_income_ratio   ( const financial_profile_t* pr
 value_t financial_profile_net_worth              ( const financial_profile_t* profile );
 float   financial_profile_progress               ( const financial_profile_t* profile );
 
+#ifdef __ANDROID__
 void financial_profile_print( FILE* stream, const financial_profile_t* profile );
+#endif
 
 #ifdef __cplusplus
 } /* extern C Linkage */

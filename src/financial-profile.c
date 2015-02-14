@@ -233,21 +233,24 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 {
 	assert( profile );
 	assert( item );
+	financial_item_t* result = NULL;
 
 	switch( type )
 	{
 		case FI_ASSET:
 			vector_push( profile->assets, *item );
-			return &vector_last( profile->assets );
+			result = &vector_last( profile->assets );
 		case FI_LIABILITY:
 			vector_push( profile->liabilities, *item );
-			return &vector_last( profile->liabilities );
+			result = &vector_last( profile->liabilities );
 		case FI_MONTHLY_EXPENSE:
 			vector_push( profile->monthly_expenses, *item );
-			return &vector_last( profile->monthly_expenses );
+			result = &vector_last( profile->monthly_expenses );
 		default:
 			break;
 	}
+
+	return result;
 }
 
 bool financial_profile_item_remove( financial_profile_t* profile, financial_item_type_t type, size_t id )
@@ -531,6 +534,7 @@ static const char* percent_format( float p )
 	return buffer;
 }
 
+#ifdef __ANDROID__
 void financial_profile_print( FILE* stream, const financial_profile_t* profile )
 {
 	size_t max_lines = financial_profile_item_count( profile, FI_ASSET );
@@ -592,3 +596,4 @@ void financial_profile_print( FILE* stream, const financial_profile_t* profile )
 	fprintf( stream, "| %28s %-18s | %47s | %47s |\n", "DEBT TO INCOME RATIO:", percent_format(financial_profile_debt_to_income_ratio(profile)), "", "" );
 	fprintf( stream, "+-------------------------------------------------+ %47s +-------------------------------------------------+\n", "" );
 }
+#endif

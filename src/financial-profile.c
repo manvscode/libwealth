@@ -25,7 +25,11 @@
 #include <time.h>
 #include <math.h>
 #define VECTOR_GROW_AMOUNT(array)      (1)
+#ifdef __ANDROID__
+#include <vector.h>
+#else
 #include <libcollections/vector.h>
+#endif
 #include "wealth.h"
 #include "financial-item.h"
 

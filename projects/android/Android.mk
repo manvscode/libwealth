@@ -9,7 +9,8 @@ LOCAL_CFLAGS   = -Wall -std=c99 -g
 SRC_PATH               := ../../src
 LOCAL_STATIC_LIBRARIES := libcollections
 LOCAL_MODULE           := wealth
-LOCAL_C_INCLUDES       := $(SRC_PATH)
+#LOCAL_C_INCLUDES       := $(SRC_PATH)
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/$(SRC_PATH)
 LOCAL_SRC_FILES        := \
     $(SRC_PATH)/financial-item.c \
     $(SRC_PATH)/financial-profile.c \

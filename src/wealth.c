@@ -27,33 +27,3 @@
 
 
 
-value_t simple_interest( value_t principle, value_t rate, value_t time )
-{
-	return principle * (1 + rate * time );
-}
-
-value_t compound_interest( value_t principle, value_t rate, value_t time )
-{
-	return principle * pow(1 + rate, time );
-}
-
-value_t annuity_present_value( value_t amount, value_t rate, value_t time )
-{
-	value_t d = pow(1 + rate, time );
-	return (amount / rate) * (1 - (1/d));
-}
-value_t annuity_due_present_value( value_t amount, value_t rate, value_t time )
-{
-	value_t d = pow(1 + rate, time );
-	return (amount / rate) * (1 - (1/d)) * (1 + rate);
-}
-
-value_t annuity_future_value( value_t amount, value_t rate, value_t time )
-{
-	return (amount / rate) * (pow(1 + rate, time) - 1);
-}
-
-value_t annuity_due_future_value( value_t amount, value_t rate, value_t time )
-{
-	return (amount / rate) * (pow(1 + rate, time) - 1) * (1 + rate);
-}

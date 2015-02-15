@@ -240,12 +240,15 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 		case FI_ASSET:
 			vector_push( profile->assets, *item );
 			result = &vector_last( profile->assets );
+			break;
 		case FI_LIABILITY:
 			vector_push( profile->liabilities, *item );
 			result = &vector_last( profile->liabilities );
+			break;
 		case FI_MONTHLY_EXPENSE:
 			vector_push( profile->monthly_expenses, *item );
 			result = &vector_last( profile->monthly_expenses );
+			break;
 		default:
 			break;
 	}
@@ -534,7 +537,6 @@ static const char* percent_format( float p )
 	return buffer;
 }
 
-#ifdef __ANDROID__
 void financial_profile_print( FILE* stream, const financial_profile_t* profile )
 {
 	size_t max_lines = financial_profile_item_count( profile, FI_ASSET );
@@ -596,4 +598,4 @@ void financial_profile_print( FILE* stream, const financial_profile_t* profile )
 	fprintf( stream, "| %28s %-18s | %47s | %47s |\n", "DEBT TO INCOME RATIO:", percent_format(financial_profile_debt_to_income_ratio(profile)), "", "" );
 	fprintf( stream, "+-------------------------------------------------+ %47s +-------------------------------------------------+\n", "" );
 }
-#endif
+

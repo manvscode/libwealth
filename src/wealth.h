@@ -23,6 +23,7 @@
 #define _WEALTH_H_
 #include <stddef.h>
 #include <stdio.h>
+#include <math.h>
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #include <stdbool.h>
 #ifdef __restrict
@@ -55,13 +56,6 @@ typedef char desc_short_t[64];
 typedef char desc_medium_t[256];
 typedef char desc_long_t[1024];
 
-
-value_t simple_interest           ( value_t principle, value_t rate, value_t time );
-value_t compound_interest         ( value_t principle, value_t rate, value_t time );
-value_t annuity_present_value     ( value_t amount, value_t rate, value_t time );
-value_t annuity_due_present_value ( value_t amount, value_t rate, value_t time );
-value_t annuity_future_value      ( value_t amount, value_t rate, value_t time );
-value_t annuity_due_future_value  ( value_t amount, value_t rate, value_t time );
 
 struct financial_item;
 typedef struct financial_item financial_item_t;
@@ -108,9 +102,39 @@ value_t financial_profile_debt_to_income_ratio   ( const financial_profile_t* pr
 value_t financial_profile_net_worth              ( const financial_profile_t* profile );
 float   financial_profile_progress               ( const financial_profile_t* profile );
 
-#ifdef __ANDROID__
 void financial_profile_print( FILE* stream, const financial_profile_t* profile );
-#endif
+
+static inline value_t simple_interest( value_t principle, value_t rate, value_t time )
+{
+	return principle * (1 + rate * time );
+}
+
+static inline value_t compound_interest( value_t principle, value_t rate, value_t time )
+{
+	return principle * pow(1 + rate, time );
+}
+
+static inline value_t annuity_present_value( value_t amount, value_t rate, value_t time )
+{
+	value_t d = pow(1 + rate, time );
+	return (amount / rate) * (1 - (1/d));
+}
+
+static inline value_t annuity_due_present_value( value_t amount, value_t rate, value_t time )
+{
+	value_t d = pow(1 + rate, time );
+	return (amount / rate) * (1 - (1/d)) * (1 + rate);
+}
+
+static inline value_t annuity_future_value( value_t amount, value_t rate, value_t time )
+{
+	return (amount / rate) * (pow(1 + rate, time) - 1);
+}
+
+static inline value_t annuity_due_future_value( value_t amount, value_t rate, value_t time )
+{
+	return (amount / rate) * (pow(1 + rate, time) - 1) * (1 + rate);
+}
 
 #ifdef __cplusplus
 } /* extern C Linkage */

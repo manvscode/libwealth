@@ -28,10 +28,34 @@
 #include "wealth.h"
 
 
-#define arr_len(arr) (sizeof(arr) / sizeof(arr[0]))
+#define arr_len(arr)             (sizeof(arr) / sizeof(arr[0]))
+#define PROFILE_FILENAME         ("./joes-financial-profile.fp")
 
+static financial_profile_t* create_profile( void );
 
-financial_profile_t* create_profile(void)
+int main( int argc, char *argv[] )
+{
+	setlocale( LC_NUMERIC, "" );
+
+	financial_profile_t* profile = financial_profile_load( PROFILE_FILENAME );
+
+	if( !profile )
+	{
+		printf( "Creating...\n" );
+		profile = create_profile();
+	}
+	else
+	{
+		financial_profile_refresh( profile );
+		financial_profile_print( stdout, profile );
+	}
+
+	financial_profile_save( profile, PROFILE_FILENAME );
+	financial_profile_destroy( &profile );
+	return 0;
+}
+
+financial_profile_t* create_profile( void )
 {
 	financial_profile_t* profile = financial_profile_create( );
 
@@ -87,35 +111,7 @@ financial_profile_t* create_profile(void)
 		financial_profile_item_add( profile, FI_MONTHLY_EXPENSE, "Kat Stipend", 390.0 );
 	}
 
-	return profile;
-}
-
-
-#define PROFILE_FILENAME         ("./joes-financial-profile.fp")
-
-int main( int argc, char *argv[] )
-{
-	setlocale( LC_NUMERIC, "" );
-
-	financial_profile_t* profile = financial_profile_load( PROFILE_FILENAME );
-
-	if( !profile )
-	{
-		printf( "Creating...\n" );
-		profile = create_profile();
-	}
-	else
-	{
-		financial_profile_refresh( profile );
-		financial_profile_print( stdout, profile );
-	}
-
-
 	financial_profile_refresh( profile );
 
-	financial_profile_save( profile, PROFILE_FILENAME );
-	financial_profile_destroy( &profile );
-	return 0;
+	return profile;
 }
-
-

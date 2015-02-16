@@ -88,6 +88,7 @@ financial_item_t*  financial_profile_item_get    ( const financial_profile_t* pr
 size_t             financial_profile_item_count  ( const financial_profile_t* profile, financial_item_type_t type );
 
 void    financial_profile_refresh                ( financial_profile_t* profile );
+void    financial_profile_sort                   ( financial_profile_t* profile );
 value_t financial_profile_goal                   ( const financial_profile_t* profile );
 void    financial_profile_set_goal               ( financial_profile_t* profile, value_t goal );
 value_t financial_profile_salary                 ( const financial_profile_t* profile );

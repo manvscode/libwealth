@@ -46,7 +46,6 @@ int main( int argc, char *argv[] )
 	}
 	else
 	{
-		financial_profile_refresh( profile );
 		financial_profile_print( stdout, profile );
 	}
 
@@ -112,6 +111,7 @@ financial_profile_t* create_profile( void )
 	}
 
 	financial_profile_refresh( profile );
+	financial_profile_sort( profile );
 
 	return profile;
 }

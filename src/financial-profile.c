@@ -425,10 +425,6 @@ void financial_profile_refresh( financial_profile_t* profile )
 {
 	assert( profile );
 
-	financial_item_collection_sort( profile->assets );
-	financial_item_collection_sort( profile->liabilities );
-	financial_item_collection_sort( profile->monthly_expenses );
-
 	profile->total_assets           = financial_item_collection_sum( profile->assets );
 	profile->total_liabilities      = financial_item_collection_sum( profile->liabilities );
 	profile->total_monthly_expenses = financial_item_collection_sum( profile->monthly_expenses );
@@ -436,6 +432,15 @@ void financial_profile_refresh( financial_profile_t* profile )
 	profile->net_worth              = profile->total_assets - profile->total_liabilities;
 
 	profile->last_updated = time( NULL );
+}
+
+void financial_profile_sort( financial_profile_t* profile )
+{
+	assert( profile );
+
+	financial_item_collection_sort( profile->assets );
+	financial_item_collection_sort( profile->liabilities );
+	financial_item_collection_sort( profile->monthly_expenses );
 }
 
 value_t financial_profile_goal( const financial_profile_t* profile )

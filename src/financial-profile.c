@@ -33,6 +33,11 @@
 #include "wealth.h"
 #include "financial-item.h"
 
+
+
+
+
+
 static financial_item_t* __financial_profile_item_add( financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item );
 
 struct financial_profile {
@@ -40,15 +45,19 @@ struct financial_profile {
 	financial_item_t* liabilities;
 	financial_item_t* monthly_expenses; /* monthly */
 
-	value_t total_assets;
-	value_t total_liabilities;
-	value_t total_monthly_expenses;
-	value_t monthly_income;
-	value_t disposable_income;
-	value_t net_worth;
-	value_t goal;
+	value_t  total_assets;
+	value_t  total_liabilities;
+	value_t  total_monthly_expenses;
+	value_t  monthly_income;
+	value_t  disposable_income;
+	value_t  net_worth;
+	value_t  goal;
+	uint8_t  flags;
+	uint8_t  level;
+	uint16_t credit_score;
+	uint32_t credit_score_updated;
 
-	time_t last_updated;
+	uint32_t last_updated;
 };
 
 
@@ -123,9 +132,9 @@ financial_profile_t* financial_profile_load( const char* filename )
 
 		if( profile )
 		{
-			vector_resize( profile->assets, header.asset_count );
-			vector_resize( profile->liabilities, header.liability_count );
-			vector_resize( profile->monthly_expenses, header.monthly_expense_count );
+			vector_reserve( profile->assets, header.asset_count );
+			vector_reserve( profile->liabilities, header.liability_count );
+			vector_reserve( profile->monthly_expenses, header.monthly_expense_count );
 
 			for( size_t i = 0; i < header.asset_count; i++ )
 			{
@@ -162,7 +171,7 @@ financial_profile_t* financial_profile_load( const char* filename )
 	}
 
 done:
-	fclose( file );
+	if( file ) fclose( file );
 	return profile;
 }
 
@@ -174,9 +183,9 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 	if( file && profile )
 	{
 		financial_profile_header_t header = {
-			.asset_count           = vector_length(profile->assets),
-			.liability_count       = vector_length(profile->liabilities),
-			.monthly_expense_count = vector_length(profile->monthly_expenses)
+			.asset_count           = vector_size(profile->assets),
+			.liability_count       = vector_size(profile->liabilities),
+			.monthly_expense_count = vector_size(profile->monthly_expenses)
 		};
 		memcpy( &header.identifier, IDENTIFIER, sizeof(IDENTIFIER) );
 
@@ -267,7 +276,7 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 	{
 		case FI_ASSET:
 		{
-			size_t count = vector_length( profile->assets );
+			size_t count = vector_size( profile->assets );
 			if( id > 0 && id < count )
 			{
 				financial_item_t last_item = vector_last( profile->assets );
@@ -278,7 +287,7 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		}
 		case FI_LIABILITY:
 		{
-			size_t count = vector_length( profile->liabilities );
+			size_t count = vector_size( profile->liabilities );
 			if( id > 0 && id < count )
 			{
 				financial_item_t last_item = vector_last( profile->liabilities );
@@ -289,7 +298,7 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
-			size_t count = vector_length( profile->monthly_expenses );
+			size_t count = vector_size( profile->monthly_expenses );
 			if( id > 0 && id < count )
 			{
 				financial_item_t last_item = vector_last( profile->monthly_expenses );
@@ -330,7 +339,7 @@ financial_item_t* financial_profile_item_get( const financial_profile_t* profile
 	{
 		case FI_ASSET:
 		{
-			size_t count = vector_length( profile->assets );
+			size_t count = vector_size( profile->assets );
 			if( id < count )
 			{
 				result = &profile->assets[ id ];
@@ -339,7 +348,7 @@ financial_item_t* financial_profile_item_get( const financial_profile_t* profile
 		}
 		case FI_LIABILITY:
 		{
-			size_t count = vector_length( profile->liabilities );
+			size_t count = vector_size( profile->liabilities );
 			if( id < count )
 			{
 				result = &profile->liabilities[ id ];
@@ -348,7 +357,7 @@ financial_item_t* financial_profile_item_get( const financial_profile_t* profile
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
-			size_t count = vector_length( profile->monthly_expenses );
+			size_t count = vector_size( profile->monthly_expenses );
 			if( id < count )
 			{
 				result = &profile->monthly_expenses[ id ];
@@ -370,13 +379,13 @@ size_t financial_profile_item_count( const financial_profile_t* profile, financi
 	switch( type )
 	{
 		case FI_ASSET:
-			result = vector_length( profile->assets );
+			result = vector_size( profile->assets );
 			break;
 		case FI_LIABILITY:
-			result = vector_length( profile->liabilities );
+			result = vector_size( profile->liabilities );
 			break;
 		case FI_MONTHLY_EXPENSE:
-			result = vector_length( profile->monthly_expenses );
+			result = vector_size( profile->monthly_expenses );
 			break;
 		default:
 			break;
@@ -389,7 +398,7 @@ size_t financial_profile_item_count( const financial_profile_t* profile, financi
 static inline value_t financial_item_collection_sum( financial_item_t* collection )
 {
 	value_t sum = 0.0;
-	const size_t count = vector_length( collection );
+	const size_t count = vector_size( collection );
 
 	for( size_t i = 0; i < count; i++ )
 	{
@@ -408,7 +417,7 @@ static int financial_item_compare( const void* l, const void* r )
 
 static inline void financial_item_collection_sort( financial_item_t* collection )
 {
-	const size_t count = vector_length( collection );
+	const size_t count = vector_size( collection );
 #if 0
 	for( int i = 2; i < count; i++ )
 	{
@@ -457,6 +466,19 @@ void financial_profile_set_goal( financial_profile_t* profile, value_t goal )
 {
 	assert( profile );
 	profile->goal = goal;
+}
+
+int16_t financial_profile_credit_score( const financial_profile_t* profile )
+{
+	assert( profile );
+	return profile->credit_score;
+}
+
+void financial_profile_set_credit_score( financial_profile_t* profile, int16_t credit_score )
+{
+	assert( profile );
+	profile->credit_score = credit_score;
+	profile->credit_score_updated = time( NULL );
 }
 
 value_t financial_profile_salary( const financial_profile_t* profile )

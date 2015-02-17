@@ -56,6 +56,11 @@ typedef char desc_short_t[64];
 typedef char desc_medium_t[256];
 typedef char desc_long_t[1024];
 
+#define PROFILE_IS_DIRTY               (1 << 0)
+#define ASSETS_IS_DIRTY                (1 << 1)
+#define LIABILITIES_IS_DIRTY           (1 << 2)
+#define MONTHLY_EXPENSES_IS_DIRTY      (1 << 3)
+
 
 struct financial_item;
 typedef struct financial_item financial_item_t;

@@ -72,7 +72,7 @@ typedef struct financial_profile financial_profile_t;
 financial_profile_t* financial_profile_create( void );
 void                 financial_profile_destroy( financial_profile_t** profile );
 financial_profile_t* financial_profile_load( const char* filename );
-void                 financial_profile_save( const financial_profile_t* profile, const char* filename );
+bool                 financial_profile_save( const financial_profile_t* profile, const char* filename );
 
 
 typedef enum financial_item_type {

@@ -166,8 +166,9 @@ done:
 	return profile;
 }
 
-void financial_profile_save( const financial_profile_t* profile, const char* filename )
+bool financial_profile_save( const financial_profile_t* profile, const char* filename )
 {
+	bool result = false;
 	FILE* file = fopen( filename, "wb" );
 
 	if( file && profile )
@@ -209,9 +210,12 @@ void financial_profile_save( const financial_profile_t* profile, const char* fil
 		fwrite( &profile->goal, sizeof(profile->goal), 1, file );
 
 		fwrite( &profile->last_updated, sizeof(profile->last_updated), 1, file );
+
+		fclose( file );
+		result = true;
 	}
 
-	fclose( file );
+	return result;
 }
 
 

@@ -60,9 +60,9 @@ typedef char desc_long_t[1024];
 struct financial_item;
 typedef struct financial_item financial_item_t;
 
-const char* financial_item_description     ( financial_item_t* item );
+const char* financial_item_description     ( const financial_item_t* item );
 void        financial_item_set_description ( financial_item_t* item, const char* description );
-value_t     financial_item_amount          ( financial_item_t* item );
+value_t     financial_item_amount          ( const financial_item_t* item );
 void        financial_item_set_amount      ( financial_item_t* item, value_t amount );
 
 

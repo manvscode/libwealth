@@ -30,7 +30,7 @@ struct financial_item {
 };
 
 
-const char* financial_item_description( financial_item_t* item )
+const char* financial_item_description( const financial_item_t* item )
 {
 	assert( item );
 	return item->description;
@@ -43,7 +43,7 @@ void financial_item_set_description( financial_item_t* item, const char* descrip
 	item->description[ sizeof(item->description) - 1 ] = '\0';
 }
 
-value_t financial_item_amount( financial_item_t* item )
+value_t financial_item_amount( const financial_item_t* item )
 {
 	assert( item );
 	return item->amount;

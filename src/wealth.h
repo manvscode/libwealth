@@ -104,25 +104,26 @@ typedef enum financial_item_sort_method {
 	FI_SORT_AMOUNT_DES
 } financial_item_sort_method_t;
 
-void    financial_profile_sort                   ( financial_profile_t* profile, financial_item_sort_method_t method );
-void    financial_profile_sort_items             ( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method );
+void     financial_profile_sort        ( financial_profile_t* profile, financial_item_sort_method_t method );
+void     financial_profile_sort_items  ( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method );
 
-void    financial_profile_refresh                ( financial_profile_t* profile );
-value_t financial_profile_goal                   ( const financial_profile_t* profile );
-void    financial_profile_set_goal               ( financial_profile_t* profile, value_t goal );
-int16_t financial_profile_credit_score           ( const financial_profile_t* profile );
-void    financial_profile_set_credit_score       ( financial_profile_t* profile, int16_t credit_score );
-value_t financial_profile_salary                 ( const financial_profile_t* profile );
-void    financial_profile_set_salary             ( financial_profile_t* profile, value_t salary );
-void    financial_profile_set_monthly_income     ( financial_profile_t* profile, value_t income );
-value_t financial_profile_monthly_income         ( const financial_profile_t* profile );
-value_t financial_profile_total_assets           ( const financial_profile_t* profile );
-value_t financial_profile_total_liabilities      ( const financial_profile_t* profile );
-value_t financial_profile_total_monthly_expenses ( const financial_profile_t* profile );
-value_t financial_profile_disposable_income      ( const financial_profile_t* profile );
-value_t financial_profile_debt_to_income_ratio   ( const financial_profile_t* profile );
-value_t financial_profile_net_worth              ( const financial_profile_t* profile );
-float   financial_profile_progress               ( const financial_profile_t* profile );
+void     financial_profile_refresh                 ( financial_profile_t* profile );
+value_t  financial_profile_goal                    ( const financial_profile_t* profile );
+void     financial_profile_set_goal                ( financial_profile_t* profile, value_t goal );
+uint16_t financial_profile_credit_score            ( const financial_profile_t* profile );
+void     financial_profile_set_credit_score        ( financial_profile_t* profile, int16_t credit_score );
+uint32_t financial_profile_credit_score_last_update( const financial_profile_t* profile );
+value_t  financial_profile_salary                  ( const financial_profile_t* profile );
+void     financial_profile_set_salary              ( financial_profile_t* profile, value_t salary );
+void     financial_profile_set_monthly_income      ( financial_profile_t* profile, value_t income );
+value_t  financial_profile_monthly_income          ( const financial_profile_t* profile );
+value_t  financial_profile_total_assets            ( const financial_profile_t* profile );
+value_t  financial_profile_total_liabilities       ( const financial_profile_t* profile );
+value_t  financial_profile_total_monthly_expenses  ( const financial_profile_t* profile );
+value_t  financial_profile_disposable_income       ( const financial_profile_t* profile );
+value_t  financial_profile_debt_to_income_ratio    ( const financial_profile_t* profile );
+value_t  financial_profile_net_worth               ( const financial_profile_t* profile );
+float    financial_profile_progress                ( const financial_profile_t* profile );
 
 void financial_profile_print( FILE* stream, const financial_profile_t* profile );
 

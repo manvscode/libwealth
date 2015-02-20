@@ -516,7 +516,7 @@ void financial_profile_set_goal( financial_profile_t* profile, value_t goal )
 	profile->goal = goal;
 }
 
-int16_t financial_profile_credit_score( const financial_profile_t* profile )
+uint16_t financial_profile_credit_score( const financial_profile_t* profile )
 {
 	assert( profile );
 	return profile->credit_score;
@@ -527,6 +527,12 @@ void financial_profile_set_credit_score( financial_profile_t* profile, int16_t c
 	assert( profile );
 	profile->credit_score = credit_score;
 	profile->credit_score_updated = time( NULL );
+}
+
+uint32_t financial_profile_credit_score_last_update( const financial_profile_t* profile )
+{
+	assert( profile );
+	return profile->credit_score_updated;
 }
 
 value_t financial_profile_salary( const financial_profile_t* profile )

@@ -1,6 +1,11 @@
 
 # Add new files in alphabetical order. Thanks.
-libwealth_src = wealth.c financial-item.c financial-profile.c 
+libwealth_src = wealth.c \
+				financial-item.c \
+				financial-asset.c \
+				financial-liability.c \
+				financial-monthly-expense.c \
+				financial-profile.c 
 
 # Add new files in alphabetical order. Thanks.
 libwealth_headers = wealth.h

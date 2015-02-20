@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  */
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
@@ -35,15 +36,13 @@
 
 
 
-
-
-
-static financial_item_t* __financial_profile_item_add( financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item );
+static financial_item_t* __financial_profile_item_add( financial_profile_t* profile, financial_item_type_t type );
 
 struct financial_profile {
-	financial_item_t* assets;
-	financial_item_t* liabilities;
-	financial_item_t* monthly_expenses; /* monthly */
+
+	financial_asset_t* assets;
+	financial_liability_t* liabilities;
+	financial_monthly_expense_t* monthly_expenses; /* monthly */
 
 	value_t  total_assets;
 	value_t  total_liabilities;
@@ -53,10 +52,8 @@ struct financial_profile {
 	value_t  net_worth;
 	value_t  goal;
 	uint8_t  flags;
-	uint8_t  level;
 	uint16_t credit_score;
 	uint32_t credit_score_updated;
-
 	uint32_t last_updated;
 };
 
@@ -71,6 +68,8 @@ financial_profile_t* financial_profile_create( void )
 		vector_create( profile->liabilities, 1 );
 		vector_create( profile->monthly_expenses, 1 );
 
+		time_t now = time( NULL );
+
 		profile->total_assets           = 0.0;
 		profile->total_liabilities      = 0.0;
 		profile->total_monthly_expenses = 0.0;
@@ -78,6 +77,11 @@ financial_profile_t* financial_profile_create( void )
 		profile->disposable_income      = 0.0;
 		profile->net_worth              = 0.0;
 		profile->goal                   = 0.0;
+		profile->flags                  = 0;
+		profile->credit_score           = 0;
+		profile->credit_score_updated   = now;
+
+		profile->last_updated           = now;
 	}
 
 	return profile;
@@ -98,6 +102,12 @@ void financial_profile_destroy( financial_profile_t** p_profile )
 	}
 }
 
+uint8_t financial_profile_flags( const financial_profile_t* profile )
+{
+	assert( profile );
+	return profile->flags;
+}
+
 
 static const uint8_t IDENTIFIER[] = { 'F', 'P', '\0', '\0' };
 
@@ -110,16 +120,29 @@ typedef struct financial_profile_header {
 } financial_profile_header_t;
 
 
+
 financial_profile_t* financial_profile_load( const char* filename )
 {
 	financial_profile_t* profile = NULL;
 	FILE* file = fopen( filename, "rb" );
 
+#define check_read(X, Y) \
+	if( Y != X ) \
+	{ \
+		if( profile ) \
+	   	{ \
+			financial_profile_destroy( &profile ); \
+			profile = NULL; \
+		} \
+		goto done; \
+	}
+
 	if( file )
 	{
 		financial_profile_header_t header;
 
-		fread( &header, sizeof(header), 1, file );
+		size_t objs_read = fread( &header, sizeof(header), 1, file );
+		check_read( objs_read, 1 );
 
 		if( memcmp(header.identifier, IDENTIFIER, sizeof(header.identifier) ) != 0 )
 		{
@@ -138,35 +161,48 @@ financial_profile_t* financial_profile_load( const char* filename )
 
 			for( size_t i = 0; i < header.asset_count; i++ )
 			{
-				financial_item_t item;
-				fread( &item, sizeof(financial_item_t), 1, file );
-				__financial_profile_item_add( profile, FI_ASSET, &item );
+				financial_asset_t* item = (financial_asset_t*) __financial_profile_item_add( profile, FI_ASSET );
+				objs_read = fread( item, sizeof(*item), 1, file );
+				check_read( objs_read, 1 );
 			}
 
 			for( size_t i = 0; i < header.liability_count; i++ )
 			{
-				financial_item_t item;
-				fread( &item, sizeof(financial_item_t), 1, file );
-				__financial_profile_item_add( profile, FI_LIABILITY, &item );
+				financial_liability_t* item = (financial_liability_t*) __financial_profile_item_add( profile, FI_LIABILITY );
+				objs_read = fread( item, sizeof(*item), 1, file );
+				check_read( objs_read, 1 );
 			}
 
 			for( size_t i = 0; i < header.monthly_expense_count; i++ )
 			{
-				financial_item_t item;
-				fread( &item, sizeof(financial_item_t), 1, file );
-				__financial_profile_item_add( profile, FI_MONTHLY_EXPENSE, &item );
+				financial_monthly_expense_t* item = (financial_monthly_expense_t*) __financial_profile_item_add( profile, FI_MONTHLY_EXPENSE );
+				objs_read = fread( item, sizeof(*item), 1, file );
+				check_read( objs_read, 1 );
 			}
 
 
-			fread( &profile->total_assets, sizeof(profile->total_assets), 1, file );
-			fread( &profile->total_liabilities, sizeof(profile->total_liabilities), 1, file );
-			fread( &profile->total_monthly_expenses, sizeof(profile->total_monthly_expenses), 1, file );
-			fread( &profile->monthly_income, sizeof(profile->monthly_income), 1, file );
-			fread( &profile->disposable_income, sizeof(profile->disposable_income), 1, file );
-			fread( &profile->net_worth, sizeof(profile->net_worth), 1, file );
-			fread( &profile->goal, sizeof(profile->goal), 1, file );
-
-			fread( &profile->last_updated, sizeof(profile->last_updated), 1, file );
+			objs_read = fread( &profile->total_assets, sizeof(profile->total_assets), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->total_liabilities, sizeof(profile->total_liabilities), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->total_monthly_expenses, sizeof(profile->total_monthly_expenses), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->monthly_income, sizeof(profile->monthly_income), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->disposable_income, sizeof(profile->disposable_income), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->net_worth, sizeof(profile->net_worth), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->goal, sizeof(profile->goal), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->flags, sizeof(profile->flags), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->credit_score, sizeof(profile->credit_score), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->credit_score_updated, sizeof(profile->credit_score_updated), 1, file );
+			check_read( objs_read, 1 );
+			objs_read = fread( &profile->last_updated, sizeof(profile->last_updated), 1, file );
+			check_read( objs_read, 1 );
 		}
 	}
 
@@ -180,6 +216,12 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 	bool result = false;
 	FILE* file = fopen( filename, "wb" );
 
+#define check_write(X, Y) \
+	if( Y != X ) \
+	{ \
+		goto done; \
+	}
+
 	if( file && profile )
 	{
 		financial_profile_header_t header = {
@@ -187,43 +229,62 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 			.liability_count       = vector_size(profile->liabilities),
 			.monthly_expense_count = vector_size(profile->monthly_expenses)
 		};
+
 		memcpy( &header.identifier, IDENTIFIER, sizeof(IDENTIFIER) );
 
-		fwrite( &header, sizeof(header), 1, file );
+		size_t objs_written = fwrite( &header, sizeof(header), 1, file );
+		check_write( objs_written, 1 );
 
 		for( size_t i = 0; i < header.asset_count; i++ )
 		{
-			const financial_item_t* item = financial_profile_item_get( profile, FI_ASSET, i );
-			fwrite( item, sizeof(financial_item_t), 1, file );
+			const financial_asset_t* item = (const financial_asset_t*) financial_profile_item_get( profile, FI_ASSET, i );
+			objs_written = fwrite( item, sizeof(financial_asset_t), 1, file );
+			check_write( objs_written, 1 );
 		}
 
 		for( size_t i = 0; i < header.liability_count; i++ )
 		{
-			const financial_item_t* item = financial_profile_item_get( profile, FI_LIABILITY, i );
-			fwrite( item, sizeof(financial_item_t), 1, file );
+			const financial_liability_t* item = (const financial_liability_t*) financial_profile_item_get( profile, FI_LIABILITY, i );
+			objs_written = fwrite( item, sizeof(financial_liability_t), 1, file );
+			check_write( objs_written, 1 );
 		}
 
 		for( size_t i = 0; i < header.monthly_expense_count; i++ )
 		{
-			const financial_item_t* item = financial_profile_item_get( profile, FI_MONTHLY_EXPENSE, i );
-			fwrite( item, sizeof(financial_item_t), 1, file );
+			const financial_monthly_expense_t* item = (const financial_monthly_expense_t*) financial_profile_item_get( profile, FI_MONTHLY_EXPENSE, i );
+			objs_written = fwrite( item, sizeof(financial_monthly_expense_t), 1, file );
+			check_write( objs_written, 1 );
 		}
 
+		objs_written = fwrite( &profile->total_assets, sizeof(profile->total_assets), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->total_liabilities, sizeof(profile->total_liabilities), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->total_monthly_expenses, sizeof(profile->total_monthly_expenses), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->monthly_income, sizeof(profile->monthly_income), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->disposable_income, sizeof(profile->disposable_income), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->net_worth, sizeof(profile->net_worth), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->goal, sizeof(profile->goal), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->flags, sizeof(profile->flags), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->credit_score, sizeof(profile->credit_score), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->credit_score_updated, sizeof(profile->credit_score_updated), 1, file );
+		check_write( objs_written, 1 );
+		objs_written = fwrite( &profile->last_updated, sizeof(profile->last_updated), 1, file );
+		check_write( objs_written, 1 );
 
-		fwrite( &profile->total_assets, sizeof(profile->total_assets), 1, file );
-		fwrite( &profile->total_liabilities, sizeof(profile->total_liabilities), 1, file );
-		fwrite( &profile->total_monthly_expenses, sizeof(profile->total_monthly_expenses), 1, file );
-		fwrite( &profile->monthly_income, sizeof(profile->monthly_income), 1, file );
-		fwrite( &profile->disposable_income, sizeof(profile->disposable_income), 1, file );
-		fwrite( &profile->net_worth, sizeof(profile->net_worth), 1, file );
-		fwrite( &profile->goal, sizeof(profile->goal), 1, file );
-
-		fwrite( &profile->last_updated, sizeof(profile->last_updated), 1, file );
-
-		fclose( file );
 		result = true;
 	}
 
+
+done:
+	if( file ) fclose( file );
 	return result;
 }
 
@@ -235,32 +296,31 @@ financial_item_t* financial_profile_item_add( financial_profile_t* profile, fina
 {
 	assert( profile );
 
-	financial_item_t item;
-	financial_item_set_description( &item, description );
-	financial_item_set_amount( &item, amount );
+	financial_item_t* item = __financial_profile_item_add( profile, type );
+	financial_item_set_description( item, description );
+	financial_item_set_amount( item, amount );
 
-	return __financial_profile_item_add( profile, type, &item );
+	return item;
 }
 
-financial_item_t* __financial_profile_item_add( financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item )
+financial_item_t* __financial_profile_item_add( financial_profile_t* profile, financial_item_type_t type )
 {
 	assert( profile );
-	assert( item );
 	financial_item_t* result = NULL;
 
 	switch( type )
 	{
 		case FI_ASSET:
-			vector_push( profile->assets, *item );
-			result = &vector_last( profile->assets );
+			vector_push_emplace( profile->assets );
+			result = (financial_item_t*) &vector_last( profile->assets );
 			break;
 		case FI_LIABILITY:
-			vector_push( profile->liabilities, *item );
-			result = &vector_last( profile->liabilities );
+			vector_push_emplace( profile->liabilities );
+			result = (financial_item_t*) &vector_last( profile->liabilities );
 			break;
 		case FI_MONTHLY_EXPENSE:
-			vector_push( profile->monthly_expenses, *item );
-			result = &vector_last( profile->monthly_expenses );
+			vector_push_emplace( profile->monthly_expenses );
+			result = (financial_item_t*) &vector_last( profile->monthly_expenses );
 			break;
 		default:
 			break;
@@ -269,7 +329,7 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 	return result;
 }
 
-bool financial_profile_item_remove( financial_profile_t* profile, financial_item_type_t type, size_t id )
+bool financial_profile_item_remove( financial_profile_t* profile, financial_item_type_t type, size_t index )
 {
 	bool result = false;
 	switch( type )
@@ -277,10 +337,10 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		case FI_ASSET:
 		{
 			size_t count = vector_size( profile->assets );
-			if( id > 0 && id < count )
+			if( index > 0 && index < count )
 			{
-				financial_item_t last_item = vector_last( profile->assets );
-				profile->assets[ id ] = last_item;
+				financial_asset_t last_item = vector_last( profile->assets );
+				profile->assets[ index ] = last_item;
 				vector_pop( profile->assets );
 				result = true;
 			}
@@ -288,10 +348,10 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		case FI_LIABILITY:
 		{
 			size_t count = vector_size( profile->liabilities );
-			if( id > 0 && id < count )
+			if( index > 0 && index < count )
 			{
-				financial_item_t last_item = vector_last( profile->liabilities );
-				profile->liabilities[ id ] = last_item;
+				financial_liability_t last_item = vector_last( profile->liabilities );
+				profile->liabilities[ index ] = last_item;
 				vector_pop( profile->liabilities );
 				result = true;
 			}
@@ -299,10 +359,10 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		case FI_MONTHLY_EXPENSE:
 		{
 			size_t count = vector_size( profile->monthly_expenses );
-			if( id > 0 && id < count )
+			if( index > 0 && index < count )
 			{
-				financial_item_t last_item = vector_last( profile->monthly_expenses );
-				profile->monthly_expenses[ id ] = last_item;
+				financial_monthly_expense_t last_item = vector_last( profile->monthly_expenses );
+				profile->monthly_expenses[ index ] = last_item;
 				vector_pop( profile->monthly_expenses );
 				result = true;
 			}
@@ -314,23 +374,23 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 	return result;
 }
 
-size_t financial_profile_item_id( const financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item )
+size_t financial_profile_item_index( const financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item )
 {
 	assert( profile );
 	switch( type )
 	{
 		case FI_ASSET:
-			return item - profile->assets;
+			return (financial_asset_t*)item - profile->assets;
 		case FI_LIABILITY:
-			return item - profile->liabilities;
+			return (financial_liability_t*)item - profile->liabilities;
 		case FI_MONTHLY_EXPENSE:
-			return item - profile->monthly_expenses;
+			return (financial_monthly_expense_t*)item - profile->monthly_expenses;
 		default:
 			return 0;
 	}
 }
 
-financial_item_t* financial_profile_item_get( const financial_profile_t* profile, financial_item_type_t type, size_t id )
+financial_item_t* financial_profile_item_get( const financial_profile_t* profile, financial_item_type_t type, size_t index )
 {
 	assert( profile );
 	financial_item_t* result = NULL;
@@ -340,27 +400,27 @@ financial_item_t* financial_profile_item_get( const financial_profile_t* profile
 		case FI_ASSET:
 		{
 			size_t count = vector_size( profile->assets );
-			if( id < count )
+			if( index < count )
 			{
-				result = &profile->assets[ id ];
+				result = (financial_item_t*) &profile->assets[ index ];
 			}
 			break;
 		}
 		case FI_LIABILITY:
 		{
 			size_t count = vector_size( profile->liabilities );
-			if( id < count )
+			if( index < count )
 			{
-				result = &profile->liabilities[ id ];
+				result = (financial_item_t*) &profile->liabilities[ index ];
 			}
 			break;
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
 			size_t count = vector_size( profile->monthly_expenses );
-			if( id < count )
+			if( index < count )
 			{
-				result = &profile->monthly_expenses[ id ];
+				result = (financial_item_t*) &profile->monthly_expenses[ index ];
 			}
 			break;
 		}
@@ -395,65 +455,53 @@ size_t financial_profile_item_count( const financial_profile_t* profile, financi
 }
 
 
-static inline value_t financial_item_collection_sum( financial_item_t* collection )
+
+void financial_profile_sort( financial_profile_t* profile, financial_item_sort_method_t method )
 {
-	value_t sum = 0.0;
-	const size_t count = vector_size( collection );
-
-	for( size_t i = 0; i < count; i++ )
-	{
-		sum += collection[ i ].amount;
-	}
-
-	return sum;
+	financial_item_collection_sort( profile->assets, sizeof(*profile->assets), method );
+	financial_item_collection_sort( profile->liabilities, sizeof(*profile->liabilities), method );
+	financial_item_collection_sort( profile->monthly_expenses, sizeof(*profile->monthly_expenses), method );
 }
 
-static int financial_item_compare( const void* l, const void* r )
+void financial_profile_sort_items( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method )
 {
-	const financial_item_t* left  = l;
-	const financial_item_t* right = r;
-	return strcmp(left->description, right->description);
-}
+	assert( profile );
 
-static inline void financial_item_collection_sort( financial_item_t* collection )
-{
-	const size_t count = vector_size( collection );
-#if 0
-	for( int i = 2; i < count; i++ )
+	switch( type )
 	{
-		for( int j = i; j > 1 && strcmp(collection[ j ].description, collection[ j - 1 ].description) < 0; j-- )
+		case FI_ASSET:
 		{
-			financial_item_t temp = collection[ j ];
-			collection[ j ]       = collection[ j - 1 ];
-			collection[ j - 1 ]   = temp;
+			financial_item_collection_sort( profile->assets, sizeof(*profile->assets), method );
+			break;
+		}
+		case FI_LIABILITY:
+		{
+			financial_item_collection_sort( profile->liabilities, sizeof(*profile->liabilities), method );
+			break;
+		}
+		case FI_MONTHLY_EXPENSE:
+		{
+			financial_item_collection_sort( profile->monthly_expenses, sizeof(*profile->monthly_expenses), method );
+			break;
+		}
+		default:
+		{
+			break;
 		}
 	}
-#else
-	qsort( collection, count, sizeof(financial_item_t), financial_item_compare );
-#endif
 }
-
 
 void financial_profile_refresh( financial_profile_t* profile )
 {
 	assert( profile );
 
-	profile->total_assets           = financial_item_collection_sum( profile->assets );
-	profile->total_liabilities      = financial_item_collection_sum( profile->liabilities );
-	profile->total_monthly_expenses = financial_item_collection_sum( profile->monthly_expenses );
+	profile->total_assets           = financial_asset_collection_sum( profile->assets );
+	profile->total_liabilities      = financial_liability_collection_sum( profile->liabilities );
+	profile->total_monthly_expenses = financial_monthly_expense_collection_sum( profile->monthly_expenses );
 	profile->disposable_income      = profile->monthly_income - profile->total_monthly_expenses;
 	profile->net_worth              = profile->total_assets - profile->total_liabilities;
 
 	profile->last_updated = time( NULL );
-}
-
-void financial_profile_sort( financial_profile_t* profile )
-{
-	assert( profile );
-
-	financial_item_collection_sort( profile->assets );
-	financial_item_collection_sort( profile->liabilities );
-	financial_item_collection_sort( profile->monthly_expenses );
 }
 
 value_t financial_profile_goal( const financial_profile_t* profile )

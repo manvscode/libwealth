@@ -25,27 +25,9 @@
 #include <stdio.h>
 #include <math.h>
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-#include <stdbool.h>
-#ifdef __restrict
-#undef __restrict
-#define __restrict restrict
-#endif
-#ifdef __inline
-#undef __inline
-#define __inline inline
-#endif
+# include <stdbool.h>
 #else
-#define bool int
-#define true 1
-#define false 0
-#ifdef __restrict
-#undef __restrict
-#define __restrict
-#endif
-#ifdef __inline
-#undef __inline
-#define __inline
-#endif
+# error "Need a C99 or better compiler."
 #endif
 #ifdef __cplusplus
 extern "C" {
@@ -65,10 +47,32 @@ typedef char desc_long_t[1024];
 struct financial_item;
 typedef struct financial_item financial_item_t;
 
+struct financial_asset;
+typedef struct financial_asset financial_asset_t;
+struct financial_liability;
+typedef struct financial_liability financial_liability_t;
+struct financial_monthly_expense;
+typedef struct financial_monthly_expense financial_monthly_expense_t;
+
 const char* financial_item_description     ( const financial_item_t* item );
 void        financial_item_set_description ( financial_item_t* item, const char* description );
 value_t     financial_item_amount          ( const financial_item_t* item );
 void        financial_item_set_amount      ( financial_item_t* item, value_t amount );
+
+
+typedef enum financial_asset_class {
+	FA_UNSPECIFIED = 0,
+	FA_CASH,
+	FA_EQUITY, /* Stocks, options, futures, et cetera */
+	FA_FIXED_INCOME, /* Bonds */
+	FA_MONEY_MARKEY,
+	FA_REAL_ESTATE,
+	FA_GUARANTEED,
+	FA_COMMODITIES,
+} financial_asset_class_t;
+
+financial_asset_class_t financial_asset_class     ( const financial_asset_t* asset );
+void                    financial_asset_set_class ( financial_asset_t* asset, financial_asset_class_t cls );
 
 
 struct financial_profile;
@@ -81,21 +85,33 @@ bool                 financial_profile_save( const financial_profile_t* profile,
 
 
 typedef enum financial_item_type {
-	FI_ASSET,
+	FI_ASSET = 0,
 	FI_LIABILITY,
 	FI_MONTHLY_EXPENSE
 } financial_item_type_t;
 
 financial_item_t*  financial_profile_item_add    ( financial_profile_t* profile, financial_item_type_t type, const char* description, value_t amount );
-bool               financial_profile_item_remove ( financial_profile_t* profile, financial_item_type_t type, size_t id );
-size_t             financial_profile_item_id     ( const financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item );
-financial_item_t*  financial_profile_item_get    ( const financial_profile_t* profile, financial_item_type_t type, size_t id );
+bool               financial_profile_item_remove ( financial_profile_t* profile, financial_item_type_t type, size_t index );
+size_t             financial_profile_item_index  ( const financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item );
+financial_item_t*  financial_profile_item_get    ( const financial_profile_t* profile, financial_item_type_t type, size_t index );
 size_t             financial_profile_item_count  ( const financial_profile_t* profile, financial_item_type_t type );
 
+
+typedef enum financial_item_sort_method {
+	FI_SORT_DESCRIPTION_ASC = 0,
+	FI_SORT_DESCRIPTION_DES,
+	FI_SORT_AMOUNT_ASC,
+	FI_SORT_AMOUNT_DES
+} financial_item_sort_method_t;
+
+void    financial_profile_sort                   ( financial_profile_t* profile, financial_item_sort_method_t method );
+void    financial_profile_sort_items             ( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method );
+
 void    financial_profile_refresh                ( financial_profile_t* profile );
-void    financial_profile_sort                   ( financial_profile_t* profile );
 value_t financial_profile_goal                   ( const financial_profile_t* profile );
 void    financial_profile_set_goal               ( financial_profile_t* profile, value_t goal );
+int16_t financial_profile_credit_score           ( const financial_profile_t* profile );
+void    financial_profile_set_credit_score       ( financial_profile_t* profile, int16_t credit_score );
 value_t financial_profile_salary                 ( const financial_profile_t* profile );
 void    financial_profile_set_salary             ( financial_profile_t* profile, value_t salary );
 void    financial_profile_set_monthly_income     ( financial_profile_t* profile, value_t income );

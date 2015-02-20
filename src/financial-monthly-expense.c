@@ -19,32 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef _FINANCIAL_ITEM_H_
-#define _FINANCIAL_ITEM_H_
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#ifdef __ANDROID__
+#include <vector.h>
+#else
+#include <libcollections/vector.h>
+#endif
+#include "wealth.h"
+#include "financial-item.h"
 
-struct financial_item {
-	desc_short_t          description;
-	value_t               amount;
-};
+value_t financial_monthly_expense_collection_sum( const financial_monthly_expense_t* collection )
+{
+	value_t sum = 0.0;
+	const size_t count = vector_size( collection );
 
-struct financial_asset {
-	financial_item_t base;
-	financial_asset_class_t asset_class;
-};
+	for( size_t i = 0; i < count; i++ )
+	{
+		sum += collection[ i ].base.amount;
+	}
 
-struct financial_liability {
-	financial_item_t base;
-};
-
-struct financial_monthly_expense {
-	financial_item_t base;
-};
-
-void    financial_item_collection_sort ( void* collection, size_t item_size, financial_item_sort_method_t method );
-
-value_t financial_asset_collection_sum           ( const financial_asset_t* collection );
-value_t financial_liability_collection_sum       ( const financial_liability_t* collection );
-value_t financial_monthly_expense_collection_sum ( const financial_monthly_expense_t* collection );
-
-
-#endif /* _FINANCIAL_ITEM_H_ */
+	return sum;
+}

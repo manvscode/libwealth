@@ -8,6 +8,6 @@ $(top_builddir)/bin/report
 __top_builddir__bin_savings_SOURCES         = savings.c
 __top_builddir__bin_savings_LDADD           = $(top_builddir)/lib/.libs/libwealth.a -lcollections
 
-__top_builddir__bin_report_SOURCES         = financial-report.c
+__top_builddir__bin_report_SOURCES         = report.c
 __top_builddir__bin_report_LDADD           = $(top_builddir)/lib/.libs/libwealth.a -lcollections
 endif

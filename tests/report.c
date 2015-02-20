@@ -43,13 +43,17 @@ int main( int argc, char *argv[] )
 	{
 		printf( "Creating...\n" );
 		profile = create_profile();
+		financial_profile_save( profile, PROFILE_FILENAME );
 	}
 	else
 	{
+		//financial_profile_sort( profile, FI_SORT_DESCRIPTION_ASC );
+		//financial_profile_sort( profile, FI_SORT_DESCRIPTION_DES );
+		//financial_profile_sort( profile, FI_SORT_AMOUNT_ASC );
+		financial_profile_sort( profile, FI_SORT_AMOUNT_DES );
 		financial_profile_print( stdout, profile );
 	}
 
-	financial_profile_save( profile, PROFILE_FILENAME );
 	financial_profile_destroy( &profile );
 	return 0;
 }
@@ -111,7 +115,6 @@ financial_profile_t* create_profile( void )
 	}
 
 	financial_profile_refresh( profile );
-	financial_profile_sort( profile );
 
 	return profile;
 }

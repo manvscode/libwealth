@@ -22,12 +22,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#ifdef __ANDROID__
+#include <vector.h>
+#else
+#include <libcollections/vector.h>
+#endif
 #include "wealth.h"
-
-struct financial_item {
-	desc_short_t description;
-	value_t      amount;
-};
+#include "financial-item.h"
 
 
 const char* financial_item_description( const financial_item_t* item )
@@ -55,3 +56,58 @@ void financial_item_set_amount( financial_item_t* item, value_t amount )
 	item->amount = amount;
 }
 
+
+
+value_t financial_item_collection_sum( financial_item_t* collection )
+{
+	value_t sum = 0.0;
+	const size_t count = vector_size( collection );
+
+	for( size_t i = 0; i < count; i++ )
+	{
+		sum += collection[ i ].amount;
+	}
+
+	return sum;
+}
+
+
+static inline int financial_item_description_asc_compare( const void* l, const void* r )
+{
+	const financial_item_t* left  = l;
+	const financial_item_t* right = r;
+	return strcmp(left->description, right->description);
+}
+
+static inline int financial_item_description_des_compare( const void* l, const void* r )
+{
+	return -1 * financial_item_description_asc_compare( l, r );
+}
+
+static inline int financial_item_amount_asc_compare( const void* l, const void* r )
+{
+	const financial_item_t* left  = l;
+	const financial_item_t* right = r;
+	return (int) (left->amount - right->amount);
+}
+
+static inline int financial_item_amount_des_compare( const void* l, const void* r )
+{
+	return -1 * financial_item_amount_asc_compare( l, r );
+}
+
+
+static int (*financial_item_sort_methods[])( const void*, const void* ) = {
+	financial_item_description_asc_compare,
+	financial_item_description_des_compare,
+	financial_item_amount_asc_compare,
+	financial_item_amount_des_compare,
+};
+
+//void financial_item_collection_sort( financial_item_t* collection, financial_item_sort_method_t method )
+void financial_item_collection_sort( void* collection, size_t item_size, financial_item_sort_method_t method )
+{
+	const size_t count = vector_size( collection );
+	int (*compare)( const void*, const void* ) = financial_item_sort_methods[ method ];
+	qsort( collection, count, item_size, compare );
+}

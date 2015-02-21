@@ -310,17 +310,25 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 	switch( type )
 	{
 		case FI_ASSET:
+		{
 			vector_push_emplace( profile->assets );
-			result = (financial_item_t*) &vector_last( profile->assets );
+			financial_asset_t* asset = &vector_last( profile->assets );
+			asset->asset_class = FA_UNSPECIFIED;
+			result = (financial_item_t*) asset;
 			break;
+		}
 		case FI_LIABILITY:
+		{
 			vector_push_emplace( profile->liabilities );
 			result = (financial_item_t*) &vector_last( profile->liabilities );
 			break;
+		}
 		case FI_MONTHLY_EXPENSE:
+		{
 			vector_push_emplace( profile->monthly_expenses );
 			result = (financial_item_t*) &vector_last( profile->monthly_expenses );
 			break;
+		}
 		default:
 			break;
 	}

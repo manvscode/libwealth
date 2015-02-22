@@ -63,9 +63,9 @@ financial_profile_t* financial_profile_create( void )
 
 	if( profile )
 	{
-		vector_create( profile->assets, 1 );
-		vector_create( profile->liabilities, 1 );
-		vector_create( profile->monthly_expenses, 1 );
+		vector_create( profile->assets, 10 );
+		vector_create( profile->liabilities, 10 );
+		vector_create( profile->monthly_expenses, 10 );
 
 		time_t now = time( NULL );
 

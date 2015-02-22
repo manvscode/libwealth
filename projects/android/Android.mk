@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 
 # Optional compiler flags.
 LOCAL_LDLIBS   = -lm
-LOCAL_CFLAGS   = -Wall -std=c99 -g
+LOCAL_CFLAGS   = -Wall -std=c99 -O2
+#LOCAL_CFLAGS   = -Wall -std=c99 -g
 
 SRC_PATH               := ../../src
 LOCAL_STATIC_LIBRARIES := libcollections

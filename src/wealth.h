@@ -72,12 +72,20 @@ typedef enum financial_asset_class {
 	FA_MONEY_MARKEY,
 	FA_REAL_ESTATE,
 	FA_GUARANTEED,
-	FA_COMMODITIES,
+	FA_COMMODITIES
 } financial_asset_class_t;
 
 financial_asset_class_t financial_asset_class     ( const financial_asset_t* asset );
 void                    financial_asset_set_class ( financial_asset_t* asset, financial_asset_class_t cls );
 
+typedef enum financial_liability_class {
+	FL_UNSPECIFIED = 0,
+	FL_CURRENT,
+	FL_LONG_TERM
+} financial_liability_class_t;
+
+financial_liability_class_t financial_liability_class     ( const financial_liability_t* liability );
+void                        financial_liability_set_class ( financial_liability_t* liability, financial_liability_class_t cls );
 
 struct financial_profile;
 typedef struct financial_profile financial_profile_t;

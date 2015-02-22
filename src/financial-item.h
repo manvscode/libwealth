@@ -34,6 +34,7 @@ struct financial_asset {
 
 struct financial_liability {
 	financial_item_t base;
+	financial_liability_class_t liability_class;
 };
 
 struct financial_monthly_expense {

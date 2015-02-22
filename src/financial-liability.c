@@ -30,6 +30,18 @@
 #include "wealth.h"
 #include "financial-item.h"
 
+financial_liability_class_t financial_liability_class( const financial_liability_t* liability )
+{
+	assert( liability );
+	return liability->liability_class;
+}
+
+void financial_liability_set_class( financial_liability_t* liability, financial_liability_class_t cls )
+{
+	assert( liability );
+	liability->liability_class = cls;
+}
+
 value_t financial_liability_collection_sum( const financial_liability_t* collection )
 {
 	value_t sum = 0.0;

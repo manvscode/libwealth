@@ -320,7 +320,9 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 		case FI_LIABILITY:
 		{
 			vector_push_emplace( profile->liabilities );
-			result = (financial_item_t*) &vector_last( profile->liabilities );
+			financial_liability_t* liability = &vector_last( profile->liabilities );
+			liability->liability_class = FL_UNSPECIFIED;
+			result = (financial_item_t*) liability;
 			break;
 		}
 		case FI_MONTHLY_EXPENSE:

@@ -13,11 +13,11 @@ LOCAL_MODULE           := wealth
 #LOCAL_C_INCLUDES       := $(SRC_PATH)
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/$(SRC_PATH)
 LOCAL_SRC_FILES        := \
-    $(SRC_PATH)/financial-item.c \
-    $(SRC_PATH)/financial-asset.c \
-    $(SRC_PATH)/financial-liability.c \
-    $(SRC_PATH)/financial-monthly-expense.c \
-    $(SRC_PATH)/financial-profile.c \
+    $(SRC_PATH)/item.c \
+    $(SRC_PATH)/asset.c \
+    $(SRC_PATH)/liability.c \
+    $(SRC_PATH)/expense.c \
+    $(SRC_PATH)/profile.c \
     $(SRC_PATH)/wealth.c
 
 include $(BUILD_SHARED_LIBRARY)

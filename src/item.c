@@ -28,7 +28,7 @@
 #include <libcollections/vector.h>
 #endif
 #include "wealth.h"
-#include "financial-item.h"
+#include "item.h"
 
 
 const char* financial_item_description( const financial_item_t* item )

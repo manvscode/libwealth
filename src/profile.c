@@ -31,7 +31,7 @@
 #include <libcollections/vector.h>
 #endif
 #include "wealth.h"
-#include "financial-item.h"
+#include "item.h"
 
 
 
@@ -41,11 +41,11 @@ struct financial_profile {
 
 	financial_asset_t* assets;
 	financial_liability_t* liabilities;
-	financial_monthly_expense_t* monthly_expenses; /* monthly */
+	financial_expense_t* expenses; /* monthly */
 
 	value_t  total_assets;
 	value_t  total_liabilities;
-	value_t  total_monthly_expenses;
+	value_t  total_expenses;
 	value_t  monthly_income;
 	value_t  disposable_income;
 	value_t  net_worth;
@@ -65,13 +65,13 @@ financial_profile_t* financial_profile_create( void )
 	{
 		vector_create( profile->assets, 10 );
 		vector_create( profile->liabilities, 10 );
-		vector_create( profile->monthly_expenses, 10 );
+		vector_create( profile->expenses, 10 );
 
 		time_t now = time( NULL );
 
 		profile->total_assets           = 0.0;
 		profile->total_liabilities      = 0.0;
-		profile->total_monthly_expenses = 0.0;
+		profile->total_expenses         = 0.0;
 		profile->monthly_income         = 0.0;
 		profile->disposable_income      = 0.0;
 		profile->net_worth              = 0.0;
@@ -94,7 +94,7 @@ void financial_profile_destroy( financial_profile_t** p_profile )
 
 		vector_destroy( profile->assets );
 		vector_destroy( profile->liabilities );
-		vector_destroy( profile->monthly_expenses );
+		vector_destroy( profile->expenses );
 
 		free( profile );
 		*p_profile = NULL;
@@ -115,7 +115,7 @@ typedef struct financial_profile_header {
 	uint8_t identifier[ 4 ];
 	uint32_t asset_count;
 	uint32_t liability_count;
-	uint32_t monthly_expense_count;
+	uint32_t expense_count;
 } financial_profile_header_t;
 
 
@@ -156,7 +156,7 @@ financial_profile_t* financial_profile_load( const char* filename )
 		{
 			vector_reserve( profile->assets, header.asset_count );
 			vector_reserve( profile->liabilities, header.liability_count );
-			vector_reserve( profile->monthly_expenses, header.monthly_expense_count );
+			vector_reserve( profile->expenses, header.expense_count );
 
 			for( size_t i = 0; i < header.asset_count; i++ )
 			{
@@ -172,9 +172,9 @@ financial_profile_t* financial_profile_load( const char* filename )
 				check_read( objs_read, 1 );
 			}
 
-			for( size_t i = 0; i < header.monthly_expense_count; i++ )
+			for( size_t i = 0; i < header.expense_count; i++ )
 			{
-				financial_monthly_expense_t* item = (financial_monthly_expense_t*) __financial_profile_item_add( profile, FI_MONTHLY_EXPENSE );
+				financial_expense_t* item = (financial_expense_t*) __financial_profile_item_add( profile, FI_MONTHLY_EXPENSE );
 				objs_read = fread( item, sizeof(*item), 1, file );
 				check_read( objs_read, 1 );
 			}
@@ -184,7 +184,7 @@ financial_profile_t* financial_profile_load( const char* filename )
 			check_read( objs_read, 1 );
 			objs_read = fread( &profile->total_liabilities, sizeof(profile->total_liabilities), 1, file );
 			check_read( objs_read, 1 );
-			objs_read = fread( &profile->total_monthly_expenses, sizeof(profile->total_monthly_expenses), 1, file );
+			objs_read = fread( &profile->total_expenses, sizeof(profile->total_expenses), 1, file );
 			check_read( objs_read, 1 );
 			objs_read = fread( &profile->monthly_income, sizeof(profile->monthly_income), 1, file );
 			check_read( objs_read, 1 );
@@ -226,7 +226,7 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 		financial_profile_header_t header = {
 			.asset_count           = vector_size(profile->assets),
 			.liability_count       = vector_size(profile->liabilities),
-			.monthly_expense_count = vector_size(profile->monthly_expenses)
+			.expense_count = vector_size(profile->expenses)
 		};
 
 		memcpy( &header.identifier, IDENTIFIER, sizeof(IDENTIFIER) );
@@ -248,10 +248,10 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 			check_write( objs_written, 1 );
 		}
 
-		for( size_t i = 0; i < header.monthly_expense_count; i++ )
+		for( size_t i = 0; i < header.expense_count; i++ )
 		{
-			const financial_monthly_expense_t* item = (const financial_monthly_expense_t*) financial_profile_item_get( profile, FI_MONTHLY_EXPENSE, i );
-			objs_written = fwrite( item, sizeof(financial_monthly_expense_t), 1, file );
+			const financial_expense_t* item = (const financial_expense_t*) financial_profile_item_get( profile, FI_MONTHLY_EXPENSE, i );
+			objs_written = fwrite( item, sizeof(financial_expense_t), 1, file );
 			check_write( objs_written, 1 );
 		}
 
@@ -259,7 +259,7 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 		check_write( objs_written, 1 );
 		objs_written = fwrite( &profile->total_liabilities, sizeof(profile->total_liabilities), 1, file );
 		check_write( objs_written, 1 );
-		objs_written = fwrite( &profile->total_monthly_expenses, sizeof(profile->total_monthly_expenses), 1, file );
+		objs_written = fwrite( &profile->total_expenses, sizeof(profile->total_expenses), 1, file );
 		check_write( objs_written, 1 );
 		objs_written = fwrite( &profile->monthly_income, sizeof(profile->monthly_income), 1, file );
 		check_write( objs_written, 1 );
@@ -327,8 +327,8 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
-			vector_push_emplace( profile->monthly_expenses );
-			result = (financial_item_t*) &vector_last( profile->monthly_expenses );
+			vector_push_emplace( profile->expenses );
+			result = (financial_item_t*) &vector_last( profile->expenses );
 			break;
 		}
 		default:
@@ -367,12 +367,12 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
-			size_t count = vector_size( profile->monthly_expenses );
+			size_t count = vector_size( profile->expenses );
 			if( index > 0 && index < count )
 			{
-				financial_monthly_expense_t last_item = vector_last( profile->monthly_expenses );
-				profile->monthly_expenses[ index ] = last_item;
-				vector_pop( profile->monthly_expenses );
+				financial_expense_t last_item = vector_last( profile->expenses );
+				profile->expenses[ index ] = last_item;
+				vector_pop( profile->expenses );
 				result = true;
 			}
 		}
@@ -393,7 +393,7 @@ size_t financial_profile_item_index( const financial_profile_t* profile, financi
 		case FI_LIABILITY:
 			return (financial_liability_t*)item - profile->liabilities;
 		case FI_MONTHLY_EXPENSE:
-			return (financial_monthly_expense_t*)item - profile->monthly_expenses;
+			return (financial_expense_t*)item - profile->expenses;
 		default:
 			return 0;
 	}
@@ -426,10 +426,10 @@ financial_item_t* financial_profile_item_get( const financial_profile_t* profile
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
-			size_t count = vector_size( profile->monthly_expenses );
+			size_t count = vector_size( profile->expenses );
 			if( index < count )
 			{
-				result = (financial_item_t*) &profile->monthly_expenses[ index ];
+				result = (financial_item_t*) &profile->expenses[ index ];
 			}
 			break;
 		}
@@ -454,7 +454,7 @@ size_t financial_profile_item_count( const financial_profile_t* profile, financi
 			result = vector_size( profile->liabilities );
 			break;
 		case FI_MONTHLY_EXPENSE:
-			result = vector_size( profile->monthly_expenses );
+			result = vector_size( profile->expenses );
 			break;
 		default:
 			break;
@@ -469,7 +469,7 @@ void financial_profile_sort( financial_profile_t* profile, financial_item_sort_m
 {
 	financial_item_collection_sort( profile->assets, sizeof(*profile->assets), method );
 	financial_item_collection_sort( profile->liabilities, sizeof(*profile->liabilities), method );
-	financial_item_collection_sort( profile->monthly_expenses, sizeof(*profile->monthly_expenses), method );
+	financial_item_collection_sort( profile->expenses, sizeof(*profile->expenses), method );
 }
 
 void financial_profile_sort_items( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method )
@@ -490,7 +490,7 @@ void financial_profile_sort_items( financial_profile_t* profile, financial_item_
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
-			financial_item_collection_sort( profile->monthly_expenses, sizeof(*profile->monthly_expenses), method );
+			financial_item_collection_sort( profile->expenses, sizeof(*profile->expenses), method );
 			break;
 		}
 		default:
@@ -506,8 +506,8 @@ void financial_profile_refresh( financial_profile_t* profile )
 
 	profile->total_assets           = financial_asset_collection_sum( profile->assets );
 	profile->total_liabilities      = financial_liability_collection_sum( profile->liabilities );
-	profile->total_monthly_expenses = financial_monthly_expense_collection_sum( profile->monthly_expenses );
-	profile->disposable_income      = profile->monthly_income - profile->total_monthly_expenses;
+	profile->total_expenses         = financial_expense_collection_sum( profile->expenses );
+	profile->disposable_income      = profile->monthly_income - profile->total_expenses;
 	profile->net_worth              = profile->total_assets - profile->total_liabilities;
 
 	profile->last_updated = time( NULL );
@@ -580,10 +580,10 @@ value_t financial_profile_total_liabilities( const financial_profile_t* profile 
 	return profile->total_liabilities;
 }
 
-value_t financial_profile_total_monthly_expenses( const financial_profile_t* profile )
+value_t financial_profile_total_expenses( const financial_profile_t* profile )
 {
 	assert( profile );
-	return profile->total_monthly_expenses;
+	return profile->total_expenses;
 }
 
 value_t financial_profile_disposable_income( const financial_profile_t* profile )
@@ -686,7 +686,7 @@ void financial_profile_print( FILE* stream, const financial_profile_t* profile )
 	fprintf( stream, "+-------------------------------------------------"
 			"+-------------------------------------------------"
 			"+-------------------------------------------------+\n" );
-	fprintf( stream, "| %28s $%'-17d | %47s | %28s -$%'-16.2f |\n", "NET WORTH:", (int) round(financial_profile_net_worth(profile)), "", "TOTAL EXPENSES:", financial_profile_total_monthly_expenses(profile) );
+	fprintf( stream, "| %28s $%'-17d | %47s | %28s -$%'-16.2f |\n", "NET WORTH:", (int) round(financial_profile_net_worth(profile)), "", "TOTAL EXPENSES:", financial_profile_total_expenses(profile) );
 	fprintf( stream, "| %28s $%'-17d | %47s | %28s $%'-17.2f |\n", "GOAL:", (int) round(financial_profile_goal(profile)), "", "MONTHLY INCOME:", financial_profile_monthly_income(profile) );
 	fprintf( stream, "| %28s %-18s | %47s | %28s $%'-17.2f |\n", "PROGRESS:", percent_format(financial_profile_progress(profile)), "", "DISPOSABLE INCOME:", financial_profile_disposable_income(profile) );
 	fprintf( stream, "| %28s %-18s | %47s | %47s |\n", "DEBT TO INCOME RATIO:", percent_format(financial_profile_debt_to_income_ratio(profile)), "", "" );

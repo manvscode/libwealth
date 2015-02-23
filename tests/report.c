@@ -92,6 +92,7 @@ financial_profile_t* create_profile( void )
 		financial_profile_item_add( profile, FI_LIABILITY, "Capital One Card (...9648)", 0.0 );
 		financial_profile_item_add( profile, FI_LIABILITY, "Chase Freedom Card (...4872)", 500.0 );
 		financial_profile_item_add( profile, FI_LIABILITY, "Fidelity AmEx Card (...3366)", 0.0 );
+		financial_profile_item_add( profile, FI_LIABILITY, "Home Mortgage", 1100.0 );
 	}
 
 	// Expenses

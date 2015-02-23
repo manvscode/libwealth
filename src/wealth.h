@@ -55,8 +55,8 @@ struct financial_asset;
 typedef struct financial_asset financial_asset_t;
 struct financial_liability;
 typedef struct financial_liability financial_liability_t;
-struct financial_monthly_expense;
-typedef struct financial_monthly_expense financial_monthly_expense_t;
+struct financial_expense;
+typedef struct financial_expense financial_expense_t;
 
 const char* financial_item_description     ( const financial_item_t* item );
 void        financial_item_set_description ( financial_item_t* item, const char* description );
@@ -86,6 +86,35 @@ typedef enum financial_liability_class {
 
 financial_liability_class_t financial_liability_class     ( const financial_liability_t* liability );
 void                        financial_liability_set_class ( financial_liability_t* liability, financial_liability_class_t cls );
+
+typedef enum financial_expense_class {
+	FE_UNSPECIFIED = 0,
+	FE_AUTOMOBILE,
+	FE_BANK_CHARGES,
+	FE_CHARITY,
+	FE_CHILDCARE,
+	FE_CLOTHING,
+	FE_CREDIT_CARD_FEES,
+	FE_EDUCATION,
+	FE_EVENTS,
+	FE_FOOD,
+	FE_GIFTS,
+	FE_HEALTHCARE,
+	FE_HOUSEHOLD,
+	FE_INSURANCE,
+	FE_JOB_EXPENSES,
+	FE_LEISURE,
+	FE_HOBBIES,
+	FE_LOANS,
+	FE_PET_CARE,
+	FE_SAVINGS,
+	FE_TAXES,
+	FE_UTILITIES,
+	FE_VACATION
+} financial_expense_class_t;
+
+///financial_expense_class_t financial_expense_class     ( const financial_expense_t* expense );
+///void                      financial_expense_set_class ( financial_expense_t* expense, financial_expense_class_t cls );
 
 struct financial_profile;
 typedef struct financial_profile financial_profile_t;
@@ -131,7 +160,7 @@ void     financial_profile_set_monthly_income      ( financial_profile_t* profil
 value_t  financial_profile_monthly_income          ( const financial_profile_t* profile );
 value_t  financial_profile_total_assets            ( const financial_profile_t* profile );
 value_t  financial_profile_total_liabilities       ( const financial_profile_t* profile );
-value_t  financial_profile_total_monthly_expenses  ( const financial_profile_t* profile );
+value_t  financial_profile_total_expenses          ( const financial_profile_t* profile );
 value_t  financial_profile_disposable_income       ( const financial_profile_t* profile );
 value_t  financial_profile_debt_to_income_ratio    ( const financial_profile_t* profile );
 value_t  financial_profile_net_worth               ( const financial_profile_t* profile );

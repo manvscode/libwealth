@@ -67,20 +67,7 @@ financial_profile_t* financial_profile_create( void )
 		vector_create( profile->liabilities, 10 );
 		vector_create( profile->expenses, 10 );
 
-		time_t now = time( NULL );
-
-		profile->total_assets           = 0.0;
-		profile->total_liabilities      = 0.0;
-		profile->total_expenses         = 0.0;
-		profile->monthly_income         = 0.0;
-		profile->disposable_income      = 0.0;
-		profile->net_worth              = 0.0;
-		profile->goal                   = 0.0;
-		profile->flags                  = 0;
-		profile->credit_score           = 0;
-		profile->credit_score_updated   = now;
-
-		profile->last_updated           = now;
+		financial_profile_clear( profile );
 	}
 
 	return profile;
@@ -463,6 +450,26 @@ size_t financial_profile_item_count( const financial_profile_t* profile, financi
 	return result;
 }
 
+void financial_profile_item_clear( financial_profile_t* profile, financial_item_type_t type )
+{
+	assert( profile );
+
+	switch( type )
+	{
+		case FI_ASSET:
+			vector_clear( profile->assets );
+			break;
+		case FI_LIABILITY:
+			vector_clear( profile->liabilities );
+			break;
+		case FI_MONTHLY_EXPENSE:
+			vector_clear( profile->expenses );
+			break;
+		default:
+			break;
+	}
+}
+
 
 
 void financial_profile_sort( financial_profile_t* profile, financial_item_sort_method_t method )
@@ -500,9 +507,32 @@ void financial_profile_sort_items( financial_profile_t* profile, financial_item_
 	}
 }
 
+void financial_profile_clear( financial_profile_t* profile )
+{
+	time_t now = time( NULL );
+
+	financial_profile_item_clear( profile, FI_ASSET );
+	financial_profile_item_clear( profile, FI_LIABILITY );
+	financial_profile_item_clear( profile, FI_MONTHLY_EXPENSE );
+
+	profile->total_assets           = 0.0;
+	profile->total_liabilities      = 0.0;
+	profile->total_expenses         = 0.0;
+	profile->monthly_income         = 0.0;
+	profile->disposable_income      = 0.0;
+	profile->net_worth              = 0.0;
+	profile->goal                   = 0.0;
+	profile->flags                  = 0;
+	profile->credit_score           = 0;
+	profile->credit_score_updated   = now;
+	profile->last_updated           = now;
+}
+
+
 void financial_profile_refresh( financial_profile_t* profile )
 {
 	assert( profile );
+	time_t now = time( NULL );
 
 	profile->total_assets           = financial_asset_collection_sum( profile->assets );
 	profile->total_liabilities      = financial_liability_collection_sum( profile->liabilities );
@@ -511,8 +541,7 @@ void financial_profile_refresh( financial_profile_t* profile )
 	                                  (profile->monthly_income - profile->total_expenses) :
 	                                  0.0;
 	profile->net_worth              = profile->total_assets - profile->total_liabilities;
-
-	profile->last_updated = time( NULL );
+	profile->last_updated           = now;
 }
 
 value_t financial_profile_goal( const financial_profile_t* profile )

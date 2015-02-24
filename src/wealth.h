@@ -136,6 +136,7 @@ bool               financial_profile_item_remove ( financial_profile_t* profile,
 size_t             financial_profile_item_index  ( const financial_profile_t* profile, financial_item_type_t type, const financial_item_t* item );
 financial_item_t*  financial_profile_item_get    ( const financial_profile_t* profile, financial_item_type_t type, size_t index );
 size_t             financial_profile_item_count  ( const financial_profile_t* profile, financial_item_type_t type );
+void               financial_profile_item_clear  ( financial_profile_t* profile, financial_item_type_t type );
 
 
 typedef enum financial_item_sort_method {
@@ -148,6 +149,7 @@ typedef enum financial_item_sort_method {
 void     financial_profile_sort        ( financial_profile_t* profile, financial_item_sort_method_t method );
 void     financial_profile_sort_items  ( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method );
 
+void     financial_profile_clear                   ( financial_profile_t* profile );
 void     financial_profile_refresh                 ( financial_profile_t* profile );
 value_t  financial_profile_goal                    ( const financial_profile_t* profile );
 void     financial_profile_set_goal                ( financial_profile_t* profile, value_t goal );

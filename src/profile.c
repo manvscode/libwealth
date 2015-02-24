@@ -507,7 +507,9 @@ void financial_profile_refresh( financial_profile_t* profile )
 	profile->total_assets           = financial_asset_collection_sum( profile->assets );
 	profile->total_liabilities      = financial_liability_collection_sum( profile->liabilities );
 	profile->total_expenses         = financial_expense_collection_sum( profile->expenses );
-	profile->disposable_income      = profile->monthly_income - profile->total_expenses;
+	profile->disposable_income      = (profile->monthly_income > profile->total_expenses) ?
+	                                  (profile->monthly_income - profile->total_expenses) :
+	                                  0.0;
 	profile->net_worth              = profile->total_assets - profile->total_liabilities;
 
 	profile->last_updated = time( NULL );

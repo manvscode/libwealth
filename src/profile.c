@@ -333,7 +333,7 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		case FI_ASSET:
 		{
 			size_t count = vector_size( profile->assets );
-			if( index > 0 && index < count )
+			if( index < count )
 			{
 				financial_asset_t last_item = vector_last( profile->assets );
 				profile->assets[ index ] = last_item;
@@ -344,7 +344,7 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		case FI_LIABILITY:
 		{
 			size_t count = vector_size( profile->liabilities );
-			if( index > 0 && index < count )
+			if( index < count )
 			{
 				financial_liability_t last_item = vector_last( profile->liabilities );
 				profile->liabilities[ index ] = last_item;
@@ -355,7 +355,7 @@ bool financial_profile_item_remove( financial_profile_t* profile, financial_item
 		case FI_MONTHLY_EXPENSE:
 		{
 			size_t count = vector_size( profile->expenses );
-			if( index > 0 && index < count )
+			if( index < count )
 			{
 				financial_expense_t last_item = vector_last( profile->expenses );
 				profile->expenses[ index ] = last_item;

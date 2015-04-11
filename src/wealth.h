@@ -153,9 +153,10 @@ void     financial_profile_sort_items  ( financial_profile_t* profile, financial
 /*
  * Callbacks
  */
-typedef void (*financial_profile_updated_fxn_t)( const financial_profile_t* profile, flags_t flags );
+typedef void (*financial_profile_updated_fxn_t)( const financial_profile_t* profile, flags_t flags, void* data );
 
 void     financial_profile_set_updated_callback    ( financial_profile_t* profile, const financial_profile_updated_fxn_t callback );
+void     financial_profile_set_user_data           ( financial_profile_t* profile, void* data );
 flags_t  financial_profile_flags                   ( const financial_profile_t* profile );
 void     financial_profile_clear                   ( financial_profile_t* profile );
 void     financial_profile_refresh                 ( financial_profile_t* profile );

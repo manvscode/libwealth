@@ -32,7 +32,7 @@
 #define PROFILE_FILENAME         ("./joes-financial-profile.fp")
 
 static financial_profile_t* create_profile( void );
-static void profile_updated_event( const financial_profile_t* profile, flags_t flags );
+static void profile_updated_event( const financial_profile_t* profile, flags_t flags, void* user_data );
 
 int main( int argc, char *argv[] )
 {
@@ -122,7 +122,7 @@ financial_profile_t* create_profile( void )
 	return profile;
 }
 
-void profile_updated_event( const financial_profile_t* profile, flags_t flags )
+void profile_updated_event( const financial_profile_t* profile, flags_t flags, void* user_data )
 {
 	if( flags & FP_FLAG_ASSETS_DIRTY )
 	{

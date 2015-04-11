@@ -57,6 +57,7 @@ struct financial_profile {
 	uint32_t last_updated;
 
 	financial_profile_updated_fxn_t on_updated;
+	void* user_data;
 };
 
 
@@ -72,6 +73,7 @@ financial_profile_t* financial_profile_create( void )
 
 		financial_profile_clear( profile );
 		profile->on_updated = NULL;
+		profile->user_data  = NULL;
 	}
 
 	return profile;
@@ -511,6 +513,12 @@ void financial_profile_set_updated_callback( financial_profile_t* profile, const
 	profile->on_updated = callback;
 }
 
+void financial_profile_set_user_data( financial_profile_t* profile, void* data )
+{
+	assert( profile );
+	profile->user_data = data;
+}
+
 flags_t financial_profile_flags( const financial_profile_t* profile )
 {
 	assert( profile );
@@ -580,7 +588,7 @@ void financial_profile_refresh( financial_profile_t* profile )
 
 	if( profile->on_updated )
 	{
-		profile->on_updated( profile, flags );
+		profile->on_updated( profile, flags, profile->user_data );
 	}
 }
 

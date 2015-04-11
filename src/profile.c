@@ -35,7 +35,8 @@
 
 
 
-static financial_item_t* __financial_profile_item_add( financial_profile_t* profile, financial_item_type_t type );
+static financial_item_t* __financial_profile_item_add ( financial_profile_t* profile, financial_item_type_t type );
+
 
 struct financial_profile {
 
@@ -50,10 +51,12 @@ struct financial_profile {
 	value_t  disposable_income;
 	value_t  net_worth;
 	value_t  goal;
-	uint8_t  flags;
+	flags_t  flags;
 	uint16_t credit_score;
 	uint32_t credit_score_updated;
 	uint32_t last_updated;
+
+	financial_profile_updated_fxn_t on_updated;
 };
 
 
@@ -68,6 +71,7 @@ financial_profile_t* financial_profile_create( void )
 		vector_create( profile->expenses, 10 );
 
 		financial_profile_clear( profile );
+		profile->on_updated = NULL;
 	}
 
 	return profile;
@@ -86,12 +90,6 @@ void financial_profile_destroy( financial_profile_t** p_profile )
 		free( profile );
 		*p_profile = NULL;
 	}
-}
-
-uint8_t financial_profile_flags( const financial_profile_t* profile )
-{
-	assert( profile );
-	return profile->flags;
 }
 
 
@@ -268,13 +266,10 @@ bool financial_profile_save( const financial_profile_t* profile, const char* fil
 		result = true;
 	}
 
-
 done:
 	if( file ) fclose( file );
 	return result;
 }
-
-
 
 
 
@@ -302,6 +297,7 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 			financial_asset_t* asset = &vector_last( profile->assets );
 			asset->asset_class = FA_UNSPECIFIED;
 			result = (financial_item_t*) asset;
+			profile->flags |= FP_FLAG_ASSETS_DIRTY;
 			break;
 		}
 		case FI_LIABILITY:
@@ -310,12 +306,14 @@ financial_item_t* __financial_profile_item_add( financial_profile_t* profile, fi
 			financial_liability_t* liability = &vector_last( profile->liabilities );
 			liability->liability_class = FL_UNSPECIFIED;
 			result = (financial_item_t*) liability;
+			profile->flags |= FP_FLAG_LIABILITIES_DIRTY;
 			break;
 		}
 		case FI_MONTHLY_EXPENSE:
 		{
 			vector_push_emplace( profile->expenses );
 			result = (financial_item_t*) &vector_last( profile->expenses );
+			profile->flags |= FP_FLAG_MONTHLY_EXPENSES_DIRTY;;
 			break;
 		}
 		default:
@@ -507,6 +505,18 @@ void financial_profile_sort_items( financial_profile_t* profile, financial_item_
 	}
 }
 
+void financial_profile_set_updated_callback( financial_profile_t* profile, const financial_profile_updated_fxn_t callback )
+{
+	assert( profile );
+	profile->on_updated = callback;
+}
+
+flags_t financial_profile_flags( const financial_profile_t* profile )
+{
+	assert( profile );
+	return profile->flags;
+}
+
 void financial_profile_clear( financial_profile_t* profile )
 {
 	time_t now = time( NULL );
@@ -534,14 +544,44 @@ void financial_profile_refresh( financial_profile_t* profile )
 	assert( profile );
 	time_t now = time( NULL );
 
-	profile->total_assets           = financial_asset_collection_sum( profile->assets );
-	profile->total_liabilities      = financial_liability_collection_sum( profile->liabilities );
-	profile->total_expenses         = financial_expense_collection_sum( profile->expenses );
-	profile->disposable_income      = (profile->monthly_income > profile->total_expenses) ?
-	                                  (profile->monthly_income - profile->total_expenses) :
-	                                  0.0;
-	profile->net_worth              = profile->total_assets - profile->total_liabilities;
-	profile->last_updated           = now;
+	if( profile->flags & FP_FLAG_ASSETS_DIRTY )
+	{
+		profile->total_assets = financial_asset_collection_sum( profile->assets );
+	}
+
+	if( profile->flags & FP_FLAG_LIABILITIES_DIRTY )
+	{
+		profile->total_liabilities = financial_liability_collection_sum( profile->liabilities );
+	}
+
+	if( profile->flags & FP_FLAG_MONTHLY_EXPENSES_DIRTY )
+	{
+		profile->total_expenses = financial_expense_collection_sum( profile->expenses );
+	}
+
+	if( profile->flags & (FP_FLAG_INCOME_DIRTY | FP_FLAG_MONTHLY_EXPENSES_DIRTY) )
+	{
+		profile->disposable_income = (profile->monthly_income > profile->total_expenses) ?
+	                                 (profile->monthly_income - profile->total_expenses) : 0.0;
+	}
+
+	if( profile->flags & (FP_FLAG_ASSETS_DIRTY | FP_FLAG_LIABILITIES_DIRTY) )
+	{
+		profile->net_worth = profile->total_assets - profile->total_liabilities;
+	}
+
+	flags_t flags = profile->flags;
+
+	/* Clear dirty flags */
+	profile->flags &= ~(FP_FLAG_INCOME_DIRTY | FP_FLAG_ASSETS_DIRTY |
+	                    FP_FLAG_LIABILITIES_DIRTY | FP_FLAG_MONTHLY_EXPENSES_DIRTY);
+
+	profile->last_updated = now;
+
+	if( profile->on_updated )
+	{
+		profile->on_updated( profile, flags );
+	}
 }
 
 value_t financial_profile_goal( const financial_profile_t* profile )
@@ -585,6 +625,7 @@ void financial_profile_set_salary( financial_profile_t* profile, value_t salary 
 {
 	assert( profile );
 	profile->monthly_income = salary / 12.0;
+	profile->flags = FP_FLAG_INCOME_DIRTY;
 }
 
 value_t financial_profile_monthly_income( const financial_profile_t* profile )
@@ -597,6 +638,7 @@ void financial_profile_set_monthly_income( financial_profile_t* profile, value_t
 {
 	assert( profile );
 	profile->monthly_income = income;
+	profile->flags = FP_FLAG_INCOME_DIRTY;
 }
 
 value_t financial_profile_total_assets( const financial_profile_t* profile )

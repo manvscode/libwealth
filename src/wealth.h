@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2015 Joseph A. Marrero.  http://www.manvscode.com/
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,17 +35,18 @@
 #endif
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 typedef double value_t;
+typedef uint16_t flags_t;
 typedef char desc_short_t[64];
 typedef char desc_medium_t[256];
 typedef char desc_long_t[1024];
 
-#define PROFILE_IS_DIRTY               (1 << 0)
-#define ASSETS_IS_DIRTY                (1 << 1)
-#define LIABILITIES_IS_DIRTY           (1 << 2)
-#define MONTHLY_EXPENSES_IS_DIRTY      (1 << 3)
+#define FP_FLAG_ASSETS_DIRTY                (1 << 0)
+#define FP_FLAG_LIABILITIES_DIRTY           (1 << 1)
+#define FP_FLAG_MONTHLY_EXPENSES_DIRTY      (1 << 2)
+#define FP_FLAG_INCOME_DIRTY                (1 << 3)
 
 
 struct financial_item;
@@ -149,6 +150,13 @@ typedef enum financial_item_sort_method {
 void     financial_profile_sort        ( financial_profile_t* profile, financial_item_sort_method_t method );
 void     financial_profile_sort_items  ( financial_profile_t* profile, financial_item_type_t type, financial_item_sort_method_t method );
 
+/*
+ * Callbacks
+ */
+typedef void (*financial_profile_updated_fxn_t)( const financial_profile_t* profile, flags_t flags );
+
+void     financial_profile_set_updated_callback    ( financial_profile_t* profile, const financial_profile_updated_fxn_t callback );
+flags_t  financial_profile_flags                   ( const financial_profile_t* profile );
 void     financial_profile_clear                   ( financial_profile_t* profile );
 void     financial_profile_refresh                 ( financial_profile_t* profile );
 value_t  financial_profile_goal                    ( const financial_profile_t* profile );

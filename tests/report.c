@@ -32,6 +32,7 @@
 #define PROFILE_FILENAME         ("./joes-financial-profile.fp")
 
 static financial_profile_t* create_profile( void );
+static void profile_updated_event( const financial_profile_t* profile, flags_t flags );
 
 int main( int argc, char *argv[] )
 {
@@ -61,6 +62,7 @@ int main( int argc, char *argv[] )
 financial_profile_t* create_profile( void )
 {
 	financial_profile_t* profile = financial_profile_create( );
+	financial_profile_set_updated_callback( profile, profile_updated_event );
 
 	//financial_profile_set_salary( profile, 114000.0 );
 	financial_profile_set_monthly_income( profile, 6400.0 );
@@ -118,4 +120,27 @@ financial_profile_t* create_profile( void )
 	financial_profile_refresh( profile );
 
 	return profile;
+}
+
+void profile_updated_event( const financial_profile_t* profile, flags_t flags )
+{
+	if( flags & FP_FLAG_ASSETS_DIRTY )
+	{
+		printf( "Assets Updated!\n" );
+	}
+
+	if( flags & FP_FLAG_LIABILITIES_DIRTY )
+	{
+		printf( "Liabilities Updated!\n" );
+	}
+
+	if( flags & FP_FLAG_MONTHLY_EXPENSES_DIRTY )
+	{
+		printf( "Monthly Expenses Updated!\n" );
+	}
+
+	if( flags & FP_FLAG_INCOME_DIRTY )
+	{
+		printf( "Income Updated!\n" );
+	}
 }

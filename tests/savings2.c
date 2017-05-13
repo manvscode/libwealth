@@ -26,6 +26,9 @@
 #include <locale.h>
 #include <wealth.h>
 
+static bool is_leap( int year );
+static int get_last_day( int month, int year );
+
 static const char* months[] = {
 	"Jan",
 	"Feb",
@@ -82,16 +85,19 @@ void pretty_table( double monthly_deposit, int years, int start_year, int start_
 			year += 1;
 		}
 
-		printf( "%-3s %4d   ", months[month], year );
-		for( int i = 0; i < arr_len(rates); i++ )
+		for(int q = 0; q < 2; q++ )
 		{
-			double r = rates[ i ];
-			double t = annuity_future_value( monthly_deposit, r / 12, period );
-			printf( "$%'-13.2f ", t );
-		}
+			printf( "%-3s %d %4d   ", months[month], q == 0 ? 15 : get_last_day(month, year), year );
+			for( int i = 0; i < arr_len(rates); i++ )
+			{
+				double r = rates[ i ];
+				double t = annuity_future_value( monthly_deposit, r / 24, period );
+				printf( "$%'-13.2f ", t );
+			}
 
-		period += 1;
-		printf( "\n" );
+			period += 1;
+			printf( "\n" );
+		}
 	}
 }
 
@@ -122,7 +128,7 @@ void csv_table( double monthly_deposit, int years, int start_year, int start_mon
 		for( int i = 0; i < arr_len(rates); i++ )
 		{
 			double r = rates[ i ];
-			double t = annuity_future_value( monthly_deposit, r / 12, period );
+			double t = annuity_future_value( monthly_deposit, r / 24, period );
 			printf( ",%.2f", t );
 		}
 
@@ -169,5 +175,28 @@ int main( int argc, char *argv[] )
 	}
 
 	return 0;
+}
+
+bool is_leap( int year )
+{
+	return year % 4 == 0;
+}
+
+int get_last_day( int month, int year )
+{
+	const int ndays[]={ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	int result = -1;
+
+	if( month >= 0 && month < 12 )
+	{
+		result = ndays[ month ];
+
+		if( is_leap(year) && month == 1 )
+		{
+			result += 1;
+		}
+	}
+
+	return result;
 }
 

@@ -215,5 +215,5 @@ static inline value_t annuity_due_future_value( value_t amount, value_t rate, va
 } /* extern C Linkage */
 namespace wealth {
 } /* namespace wealth */
-#endif 
+#endif
 #endif /* _WEALTH_H_ */
